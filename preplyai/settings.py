@@ -137,8 +137,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://preplyai-frontend.vercel.app/"
-    "https://www.preplyai.com/"
+    "https://preplyai-frontend.vercel.app",
+]
+
+# Use a regex pattern to allow any subdomain or path under preplyai.com
+CORS_ORIGIN_REGEX_WHITELIST = [
+    r"^https:\/\/.*\.preplyai\.com$",  # Matches any subdomain of preplyai.com
+    r"^https:\/\/preplyai\.com$",     # Matches the root domain
 ]
 django_heroku.settings(locals())
 
