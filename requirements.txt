@@ -8,8 +8,10 @@ attrs==24.2.0
 certifi==2024.8.30
 charset-normalizer==3.4.0
 distro==1.9.0
+dj-database-url==2.3.0
 Django==5.1.4
 django-cors-headers==4.6.0
+django-heroku==0.3.1
 django-rest-framework==0.1.0
 djangorestframework==3.15.2
 frozenlist==1.5.0
@@ -31,6 +33,7 @@ openai==1.57.2
 orjson==3.10.12
 packaging==24.2
 propcache==0.2.1
+psycopg2==2.9.10
 pydantic==2.10.3
 pydantic_core==2.27.1
 pypdf==5.1.0
@@ -45,4 +48,5 @@ tenacity==9.0.0
 tqdm==4.67.1
 typing_extensions==4.12.2
 urllib3==2.2.3
+whitenoise==6.8.2
 yarl==1.18.3
