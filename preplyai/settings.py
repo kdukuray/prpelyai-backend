@@ -138,6 +138,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://preplyai-frontend.vercel.app/"
+    "https://www.preplyai.com/"
 ]
 django_heroku.settings(locals())
 
