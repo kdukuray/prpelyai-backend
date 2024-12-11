@@ -138,6 +138,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://preplyai-frontend.vercel.app",
+    "http://preplyai-frontend.vercel.app",
+    "https://www.preplyai.com",
+    "http://www.preplyai.com"
 ]
 
 # Use a regex pattern to allow any subdomain or path under preplyai.com
