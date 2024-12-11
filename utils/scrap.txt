@@ -1,0 +1,235 @@
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from rest_framework import status
+from openai import OpenAI
+from os import environ
+from pypdf import PdfReader
+from typing import List, Dict
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import sys
+
+from .models import Summary
+
+from .helperfunctions import is_valid_json
+import json
+
+
+# Should be moved to another app, only here for testing purposes
+@api_view(['POST'])
+def generate_summary(request):
+    client = OpenAI(api_key=environ.get('OPENAI_API_KEY'))
+    # system_prompt = """
+    # You are an advanced text summarization AI. Extract the most critical information from the input text and generate a JSON summary with:
+    # - main topic as a string
+    # - key points as list of objects, every key point has the fomrat {key_point: string, supporting_detailed: [list of strings]}
+    # - Optional additional insights as a list of strings.
+    # Ignore trivial details. Preserve original meaning. Respond ONLY with a valid JSON string that comprehensively represents the text's essence.
+    # """
+    system_prompt = """
+    You are a precise text summarization AI designed to distill complex texts into structured, meaningful insights. Your goal is to create a comprehensive yet concise summary that captures the core essence of the input text.
+    Summary Requirements:
+    1. JSON Structure:
+       - Identify and extract the primary topic as a clear, succinct string
+       - Generate key points as a structured list of objects
+       - Each key point must include:
+         a. A concise summary statement
+         b. Supporting detailed evidence or explanations
+
+    2. Summarization Principles:
+       - Focus on substantive, meaningful content
+       - Prioritize critical information and core arguments
+       - Eliminate redundant, trivial, or peripheral details
+       - Maintain fidelity to the original text's core message and intent
+
+    3. Optional Insights:
+       - Include an optional list of additional insights that provide deeper context or nuanced observations
+       - These insights should offer value beyond the primary key points
+
+    4. JSON Formatting:
+       - Ensure the output is a valid, well-structured JSON string
+       - Use clear, precise language
+       - Avoid unnecessary verbosity
+
+    5. Response Constraint:
+       - Provide ONLY the JSON summary, with no additional commentary or explanation
+
+    Example JSON Structure:
+    {
+      "main_topic": "...",
+      "key_points": [
+        {
+          "key_point": "...",
+          "supporting_details": ["...", "..."]
+        }
+      ],
+      "additional_insights": ["...", "..."]
+    }
+    """
+
+    pdf_file = request.FILES['source_pdf']
+    pdf = PdfReader(pdf_file)
+    all_pdf_text = ""
+    for page in pdf.pages:
+        page_text = page.extract_text(extraction_mode="layout", layout_mode_space_vertically=False)
+        all_pdf_text += page_text
+
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=5000,
+        chunk_overlap=100,
+        length_function=len,
+        is_separator_regex=False
+
+    )
+    all_pdf_text_chunks = text_splitter.split_text(all_pdf_text)
+    summarized_chunks_as_dicts: List[Dict] = []
+    summarized_chunks_as_json_str: List[str] = []
+    for chunk in all_pdf_text_chunks:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": chunk}
+            ]
+        )
+        chunk_summary = response.choices[0].message.content
+        # print(chunk_summary)
+        if is_valid_json(chunk_summary):
+            summarized_chunks_as_json_str.append(chunk_summary)
+            summarized_chunks_as_dicts.append(json.loads(chunk_summary))
+
+    for summarized_chunks_as_dict in summarized_chunks_as_dicts:
+        # print(summarized_chunks_as_dict)
+        # print("d")
+        pass
+        # print("--------------------")
+        # print(f"Main Topic: {summarized_chunks_as_dict["main_topic"]}")
+        # print("Key Points:")
+        # for key_point in summarized_chunks_as_dict["key_points"]:
+        #     print(f"Key Point: {key_point['key_point']}")
+        #     for sd in key_point["supporting_details"]:
+        #         print(f"\t---{sd}")
+        # print("--------------------")
+
+        # print(f'Main Topic: f{summarized_chunks_as_dict.get("main_topic", "n/a")}')
+        # for key_point in json.loads(summarized_chunks_as_dict.get("key_points")):
+        #     print(f"Key Point: f{key_point['key_point']}")
+        #     for sd in summarized_chunks_as_dict.get("supporting_details"):
+        # for key_point
+        # print
+    summary_content = "!@#$%".join(summarized_chunks_as_json_str)
+    summary_content_parsed = summary_content.split("!@#$%")
+    if summary_content_parsed == summarized_chunks_as_json_str:
+        print("hurray")
+    # new_summary = Summary(content=summary_content)
+    # new_summary.save()
+
+    # print(summary_content)
+    # print(type(summary_content))
+
+    return Response({"points": summarized_chunks_as_json_str}, status=status.HTTP_200_OK)
+
+
+------------------------------------------------------------------------------------------------------------------------------
+from django.shortcuts import render
+from openai import OpenAI
+from os import environ
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view
+
+@api_view(['POST'])
+def generate_crash_course(request):
+    openai_api_client = OpenAI(api_key=environ.get('OPENAI_API_KEY'))
+    system_prompt = """
+    You are a highly knowledgeable and engaging AI tutor specializing in creating crash courses for students. You are provided with a **topic** and optionally a **course name**. Your job is to generate a detailed crash course to help students become familiar with the topic, ensuring that the content is easy to understand and practical.
+
+    Your response must include the following:
+    1. **Introduction**
+       - A brief overview of the topic.
+       - State why the topic is important or relevant, especially to the provided course name if given.
+    2. **Key Definitions**
+       - Provide simple and easy-to-understand definitions for critical terms related to the topic.
+       - Use examples or analogies to make abstract concepts relatable when applicable.
+    3. **Core Concepts**
+       - Outline the main ideas or principles of the topic.
+       - Present information in a logical order, starting from basic concepts and building up to more advanced ideas.
+    4. **Step-by-Step Explanations**
+       - Provide step-by-step breakdowns of key processes or ideas related to the topic.
+       - Use lists, bullet points, or numbered steps to improve clarity.
+    5. **Analogies and Examples**
+       - Use analogies to simplify complex ideas.
+       - Provide real-world or practical examples where the topic or concepts might apply.
+    6. **Common Mistakes and Misconceptions**
+       - Highlight common misunderstandings students might have about the topic and clarify them.
+    7. **Practice Questions or Exercises**
+       - Include at least 3-5 practice questions, exercises, or scenarios to help students test their understanding.
+    # 8. **Further Learning Resources**
+    #    - Suggest additional materials, books, articles, or tools students can explore to learn more about the topic.
+
+    **Guidelines:**
+    - Use simple language suitable for beginners.
+    - Break down complex topics into bite-sized sections.
+    - Tailor your examples and practice questions to align with the provided course name if applicable.
+    - Be concise but thorough, ensuring the crash course can be completed in about 1-2 hours.
+    - Format your response with clear headings and bullet points for readability.
+    - Respond strictly in Markdown format without adding any additional text, comments, or explanations.
+
+    **Example Input:**
+    Topic: Machine Learning
+    Course Name: Introduction to Data Science
+
+    **Example Output:**
+    ```markdown
+    # Crash Course on Machine Learning
+
+    ## Introduction
+    Machine Learning is the science of teaching computers to learn from data without being explicitly programmed. It's an essential skill in Data Science and helps make predictions, find patterns, and automate decision-making.
+
+    ## Key Definitions
+    - **Machine Learning**: A method of teaching computers to recognize patterns and make decisions. Think of it as teaching a student to recognize apples and oranges from pictures.
+    - **Model**: The "brain" of machine learning, which learns from data.
+
+    ## Core Concepts
+    - **Supervised Learning**: Teaching the model with labeled data (e.g., showing it many examples of "apples" and "oranges").
+    - **Unsupervised Learning**: Finding patterns in unlabeled data.
+
+    ...
+
+    Continue building the crash course in this structured and easy-to-understand manner.
+
+    #initialize openai and define system prompt
+    """
+
+
+    # get the payload from the request
+    new_crash_course_topic = request.data.get("topic")
+    new_crash_course_course = request.data.get("course", None)
+
+    # construct prompt:
+    prompt = ""
+    match new_crash_course_course:
+        case None:
+            prompt = f"generate a crash course for the topic: {new_crash_course_topic}"
+        case _:
+            prompt = (f"generate a crash course for the topic: {new_crash_course_topic}"
+                      f"based on the course: {new_crash_course_course}")
+
+    api_response = openai_api_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    crash_course_as_markdown = api_response.choices[0].message.content
+
+    return Response({"d": crash_course_as_markdown}, status=status.HTTP_200_OK)
+-------------------
+   system_prompt = (
+        "You are a JSON-based question generator. Your task is to create list of questions with the following structure: "
+        '{"prompt": string, "options": [{"letter", "value"}], "answer": string}. '
+        "Each question must have 4 options to choose from. "
+        "The 'options' property is a list of lists, where each sublist contains exactly 2 elements: "
+        "the first element is a letter (e.g., 'A', 'B', 'C', 'D'), and the second element is the corresponding value. "
+        "Respond only with JSON in the specified format, without any additional text or explanation."
+    )
