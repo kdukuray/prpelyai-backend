@@ -45,9 +45,12 @@ def generate_resources(topic: str, course: str):
     ]
     """
     try:
-        ppai_api_client = OpenAI(api_key=environ.get("PERPLEXITYAI_API_KEY"), base_url="https://api.perplexity.ai")
-        api_response = ppai_api_client.chat.completions.create(
-            model="llama-3.1-sonar-huge-128k-online",
+        # ppai_api_client = OpenAI(api_key=environ.get("PERPLEXITYAI_API_KEY"), base_url="https://api.perplexity.ai")
+        openai_api_client = OpenAI(api_key=environ.get("OPENAI_API_KEY"))
+        # api_response = ppai_api_client.chat.completions.create(
+        api_response = openai_api_client.chat.completions.create(
+            # model="llama-3.1-sonar-huge-128k-online",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"{topic} for {course}"}
