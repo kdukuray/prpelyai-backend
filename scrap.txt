@@ -1,0 +1,5 @@
+# Use a regex pattern to allow any subdomain or path under preplyai.com
+# CORS_ORIGIN_REGEX_WHITELIST = [
+#     r"^https:\/\/.*\.preplyai\.com$",  # Matches any subdomain of preplyai.com
+#     r"^https:\/\/preplyai\.com$",     # Matches the root domain
+# ]
