@@ -16,6 +16,7 @@ def get_practice_test(request, id):
         response = {"questions": practice_test.content}
         return Response(response, status=status.HTTP_200_OK)
     except Exception as e:
+        print(str(e))
         response = {"error": "The specified practice test does not exist"}
         return Response(response, status=status.HTTP_400_BAD_REQUEST)
 
@@ -66,6 +67,7 @@ def explain_answer(request):
         payload = {"explanation": explanation}
         return Response(payload, status=status.HTTP_200_OK)
     except Exception as e:
+        print(str(e))
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -151,6 +153,7 @@ def generate_questions(request):
         return Response(data={'id': new_test_id}, status=status.HTTP_200_OK)
 
     except Exception as e:
+        print(str(e))
         return Response(data={'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -165,6 +168,7 @@ def get_generations(request):
         return Response({"practice_test_generations": serialized_last_three_generations},
                         status=status.HTTP_200_OK)
     except Exception as e:
+        print(str(e))
         return Response(data={'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -16,6 +16,7 @@ def get_crash_course(request):
         crash_course = CrashCourse.objects.get(pk=crash_course_id)
         return Response({"content": crash_course.content, "resources": crash_course.resources}, status=status.HTTP_200_OK)
     except Exception as e:
+        print(str(e))
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # function to generate a crash course
@@ -23,8 +24,7 @@ def get_crash_course(request):
 def generate_crash_course(request):
     try:
         openai_api_client = OpenAI(api_key=environ.get('OPENAI_API_KEY'))
-        system_prompt = """
-        You are a highly knowledgeable and engaging AI tutor specializing in creating crash courses for students. You are provided with a **topic** and optionally a **course name**. Your job is to generate a detailed crash course to help students become familiar with the topic, ensuring that the content is easy to understand, practical, and logical, with step-by-step reasoning and explanations that make sense to the user.
+        system_prompt = """You are a highly knowledgeable and engaging AI tutor specializing in creating crash courses for students. You are provided with a **topic** and optionally a **course name**. Your job is to generate a detailed crash course to help students become familiar with the topic, ensuring that the content is easy to understand, practical, and logical, with step-by-step reasoning and explanations that make sense to the user.
     
         Your response must include relevant sections based on the topic. Omit any headings that don't logically apply to the given topic. 
     
@@ -144,6 +144,7 @@ def generate_crash_course(request):
 
         return Response({"new_crash_course_id": new_crash_course_id, "new_crash_course_resources": new_crash_course_resources}, status=status.HTTP_200_OK)
     except Exception as e:
+        print(str(e))
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -159,4 +160,5 @@ def get_generations(request):
         return Response({"crash_course_generations": serialized_last_three_generations},
                         status=status.HTTP_200_OK)
     except Exception as e:
+        print(str(e))
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
