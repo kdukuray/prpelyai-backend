@@ -1,1 +1,1 @@
-web: gunicorn preplyai.wsgi
+web: gunicorn preplyai.wsgi --timeout 120
